@@ -1,17 +1,30 @@
-import os
-import sys
-import re
-from google import genai
 from google.genai import types
+from google import genai
+import logging
+import sys
+import os
+import re
 
-# Inyección de la raíz del proyecto en el path del sistema para importar config
+# Inyección de la raíz del proyecto en el path del sistema para importar config.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
+# Configuración básica del logging para seguimiento de la ejecución.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 def limpiar_codigo_markdown(texto_crudo):
     """
-    Los LLM suelen envolver el código en bloques ```python ... ```
-    Esta función extrae únicamente el contenido de código ejecutable.
+    Extrae el código contenido en bloques markdown y retorna únicamente
+    el contenido ejecutable.
+    
+    Parámetros:
+        texto_crudo (str): texto posiblemente envuelto en un bloque
+        markdown de Python.
+
+    Retorno:
+        str: código limpio y listo para ser ejecutado. Si no se detecta
+        un bloque Markdown válido, se devuelve el texto original.
     """
     patron = r"```python\s*(.*?)\s*```"
     resultado = re.search(patron, texto_crudo, re.DOTALL)
@@ -20,46 +33,50 @@ def limpiar_codigo_markdown(texto_crudo):
     return texto_crudo.strip()
 
 def ejecutar_inferencia_completa():
-    print("[*] Iniciando Fase 1: Inferencia con la nueva Gemini API...")
-    print(f"[*] Utilizando el modelo: {config.LLM_MODEL}")
-    
-    # Validación estricta del archivo .env
+    """
+    Función principal que ejecuta el proceso completo de inferencia,
+    configura el cliente del LLM, itera sobre los casos de uso en el dataset,
+    y genera código utilizando el LLM y lo guarda en archivos específicos.
+    """
+    logging.info("Iniciando fase 1: generando código con el LLM...")
+        
+    # Verificación de la clave API antes de proceder.
     if not config.GEMINI_API_KEY:
-        print("[!] ERROR CRÍTICO: No se detectó la variable GEMINI_API_KEY.")
-        print("    Asegurate de haber creado el archivo .env en la raíz y configurado la clave.")
+        logging.error("No se detectó la variable de entorno GEMINI_API_KEY.")
         return
 
-    # Inicializar el nuevo cliente oficial de Gemini
+    # Inicializar el nuevo cliente del LLM.
     client = genai.Client(api_key=config.GEMINI_API_KEY)
 
-    # Configuración de replicabilidad científica usando la nueva SDK
+    # Configuración para la replicabilidad (temperatura en cero y semilla fija).
     config_generacion = types.GenerateContentConfig(
         temperature=0.0,
         seed=42
     )
 
+    # Verificación de la existencia de la carpeta del dataset antes de iniciar el proceso.
     if not os.path.exists(config.DATASET_DIR):
-        print(f"[!] Error: La carpeta de dataset no existe en {config.DATASET_DIR}")
+        logging.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
-    # Escaneo secuencial de los casos de uso en el dataset
+    # Escaneo secuencial de los casos de uso en el dataset.
     for elemento in os.listdir(config.DATASET_DIR):
         ruta_escenario = os.path.join(config.DATASET_DIR, elemento)
-        
         if os.path.isdir(ruta_escenario):
             ruta_prompt = os.path.join(ruta_escenario, "prompt.txt")
             ruta_salida_codigo = os.path.join(ruta_escenario, "codigo_ia.py")
 
+            # Verificación de la existencia del archivo de prompt para el caso de uso actual.
             if not os.path.exists(ruta_prompt):
+                logging.warning(f"El archivo de prompt no existe en {ruta_prompt}.")
                 continue
 
-            print(f"[+] Consultando API para: {elemento}... (Temp: 0.0, Seed: 42)")
-
+            # Lectura del contenido del prompt para el caso de uso actual.
             with open(ruta_prompt, "r", encoding="utf-8") as f:
                 prompt_contenido = f.read()
 
+            # Generación del código utilizando el LLM.
             try:
-                # Nueva sintaxis para generar contenido con el cliente unificado
                 respuesta = client.models.generate_content(
                     model=config.LLM_MODEL,
                     contents=prompt_contenido,
@@ -67,17 +84,14 @@ def ejecutar_inferencia_completa():
                 )
                 texto_respuesta = respuesta.text
 
-                # Parseo del bloque Markdown
                 codigo_limpio = limpiar_codigo_markdown(texto_respuesta)
 
-                # Escritura física del archivo de código de la IA
                 with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
                     f.write(codigo_limpio)
-                
-                print(f"    [✔] Código generado con éxito en {elemento}/codigo_ia.py")
+                logging.info(f"Código generado con éxito en {elemento}/codigo_ia.py")
 
             except Exception as e:
-                print(f"    [!] Error al procesar {elemento}: {e}")
+                logging.error(f"Error al procesar {elemento}: {e}")
 
 if __name__ == "__main__":
     ejecutar_inferencia_completa()

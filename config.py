@@ -1,16 +1,17 @@
-import os
 from dotenv import load_dotenv
+import os
 
-# 1. Rutas Estructurales Absolutas
+# Rutas absolutas.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_DIR = os.path.join(BASE_DIR, "dataset")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 SAST_REPORTS_DIR = os.path.join(RESULTS_DIR, "sast_reports")
+DAST_REPORTS_DIR = os.path.join(RESULTS_DIR, "dast_reports")
 
-# Cargar el archivo .env de forma explícita desde la raíz del proyecto
+# Carga el archivo .env desde la raíz del proyecto.
 ruta_env = os.path.join(BASE_DIR, ".env")
 load_dotenv(dotenv_path=ruta_env)
 
-# 2. Configuración del LLM (Leída estrictamente del entorno)
+# Configuración del LLM.
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-LLM_MODEL = "gemini-3-flash-preview"  # Selección del modelo de última generación
+LLM_MODEL = "gemini-3-flash-preview"
