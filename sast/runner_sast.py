@@ -16,7 +16,7 @@ def ejecutar_sast_completo():
     recorre cada escenario de la carpeta /dataset, ejecuta Semgrep y guarda
     los reportes en results/sast_reports.
     """
-    logger.info("Iniciando fase 2: análisis estático con Semgrep...")
+    logger.info("Iniciando fase 2: análisis estático...")
     
     # Validación de que la carpeta de reportes exista antes de guardar.
     os.makedirs(config.SAST_REPORTS_DIR, exist_ok=True)
@@ -37,8 +37,6 @@ def ejecutar_sast_completo():
             if not os.path.exists(ruta_codigo):
                 logger.warning(f"Saltando {elemento}: no se encontró codigo_ia.py")
                 continue
-
-            logger.info(f"Escaneando con Semgrep: {elemento}...")
             
             ruta_reporte = os.path.join(config.SAST_REPORTS_DIR, f"{elemento}_sast.json")
             comando = [
@@ -60,7 +58,7 @@ def ejecutar_sast_completo():
                 )
                 
                 if os.path.exists(ruta_reporte):
-                    logger.info(f"Reporte de vulnerabilidades SQLi guardado en: results/sast_reports/{elemento}_sast.json")
+                    logger.info(f"Reporte guardado correctamente en /results/sast_reports/{elemento}_sast.json")
                 else:
                     logger.error(f"No se pudo generar el archivo de reporte: {resultado.stderr}.")
 
