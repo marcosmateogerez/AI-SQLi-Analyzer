@@ -7,8 +7,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
-# Configuración básica del logging para seguimiento de la ejecución.
-logging.basicConfig(level=logging.INFO)
+# Instanciación de logger para este módulo específico.
 logger = logging.getLogger(__name__)
 
 def ejecutar_sast_completo():
@@ -29,7 +28,7 @@ def ejecutar_sast_completo():
     env_utf8 = os.environ.copy()
     env_utf8["PYTHONUTF8"] = "1"
 
-    # Recorrer los escenarios dentro de la carpeta /dataset.
+    # Recorrido de los escenarios dentro de la carpeta /dataset.
     for elemento in os.listdir(config.DATASET_DIR):
         ruta_escenario = os.path.join(config.DATASET_DIR, elemento)
 
@@ -50,7 +49,7 @@ def ejecutar_sast_completo():
                 ruta_codigo
             ]
 
-            # Ejecutar el comando de Semgrep y capturar la salida.
+            # Ejecución del comando de Semgrep y captura de la salida.
             try:
                 resultado = subprocess.run(
                     comando, 

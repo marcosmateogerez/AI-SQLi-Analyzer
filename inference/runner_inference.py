@@ -9,8 +9,7 @@ import re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
-# Configuración básica del logging para seguimiento de la ejecución.
-logging.basicConfig(level=logging.INFO)
+# Instanciación de logger para este módulo específico.
 logger = logging.getLogger(__name__)
 
 def limpiar_codigo_markdown(texto_crudo):
@@ -38,14 +37,14 @@ def ejecutar_inferencia_completa():
     configura el cliente del LLM, itera sobre los casos de uso en el dataset,
     y genera código utilizando el LLM y lo guarda en archivos específicos.
     """
-    logging.info("Iniciando fase 1: generando código con el LLM...")
+    logger.info("Iniciando fase 1: generando código con el LLM...")
         
     # Verificación de la clave API antes de proceder.
     if not config.GEMINI_API_KEY:
-        logging.error("No se detectó la variable de entorno GEMINI_API_KEY.")
+        logger.error("No se detectó la variable de entorno GEMINI_API_KEY.")
         return
 
-    # Inicializar el nuevo cliente del LLM.
+    # Inicialización del cliente del LLM.
     client = genai.Client(api_key=config.GEMINI_API_KEY)
 
     # Configuración para la replicabilidad (temperatura en cero y semilla fija).
@@ -56,7 +55,7 @@ def ejecutar_inferencia_completa():
 
     # Verificación de la existencia de la carpeta del dataset antes de iniciar el proceso.
     if not os.path.exists(config.DATASET_DIR):
-        logging.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
+        logger.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
     # Escaneo secuencial de los casos de uso en el dataset.
@@ -68,7 +67,7 @@ def ejecutar_inferencia_completa():
 
             # Verificación de la existencia del archivo de prompt para el caso de uso actual.
             if not os.path.exists(ruta_prompt):
-                logging.warning(f"El archivo de prompt no existe en {ruta_prompt}.")
+                logger.warning(f"El archivo de prompt no existe en {ruta_prompt}.")
                 continue
 
             # Lectura del contenido del prompt para el caso de uso actual.
@@ -88,10 +87,10 @@ def ejecutar_inferencia_completa():
 
                 with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
                     f.write(codigo_limpio)
-                logging.info(f"Código generado con éxito en {elemento}/codigo_ia.py")
+                logger.info(f"Código generado con éxito en {elemento}/codigo_ia.py")
 
             except Exception as e:
-                logging.error(f"Error al procesar {elemento}: {e}")
+                logger.error(f"Error al procesar {elemento}: {e}")
 
 if __name__ == "__main__":
     ejecutar_inferencia_completa()
