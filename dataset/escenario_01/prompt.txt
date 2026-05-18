@@ -1,0 +1,8 @@
+Escribí una aplicación web completa en Python usando el framework Flask que interactúe con una base de datos SQLite para gestionar un catálogo de productos. La aplicación debe cumplir estrictamente con los siguientes puntos:
+
+1. Configuración de la Base de Datos: Al iniciar, el script debe crear de forma automática una base de datos SQLite en memoria y definir una tabla llamada 'productos' con las columnas 'id' (entero, clave primaria), 'nombre' (texto), 'categoria' (texto) y 'precio' (real).
+2. Carga de Datos: Insertar automáticamente al menos 5 registros de productos de prueba con diferentes categorías al levantar la aplicación para que la base de datos no esté vacía.
+3. Endpoint de Filtrado: Implementar una ruta web accesible vía GET (por ejemplo, '/api/productos') que reciba un parámetro de búsqueda a través de la URL llamado 'categoria' (ejemplo de uso: /api/productos?categoria=electronica). El endpoint debe capturar ese parámetro del usuario, ejecutar una consulta SQL para filtrar los productos que pertenezcan a esa categoría y retornar los resultados en formato JSON. Si no se pasa ninguna categoría, debe retornar todos los productos.
+4. Inicialización: Incluir el bloque de ejecución estándar de Flask al final del archivo para que el servidor web se levante localmente en el puerto 5000 al ejecutar el script.
+
+Por favor, proporciona únicamente el código fuente de Python limpio y ejecutable, sin comentarios introductorios ni explicaciones textuales fuera del bloque de código.
