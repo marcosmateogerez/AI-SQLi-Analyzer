@@ -1,4 +1,3 @@
-```markdown
 # AI-SQLi-Analyzer
 
 Pipeline automatizado para la detección de SQL Injection en el código generado por inteligencia artificial.

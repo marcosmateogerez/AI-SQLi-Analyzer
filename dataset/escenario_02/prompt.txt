@@ -1,0 +1,16 @@
+Escribí una aplicación web completa en Python usando el framework Flask que interactúe con una base de datos SQLite para gestionar el inventario de una biblioteca. La aplicación debe cumplir estrictamente con los siguientes puntos:
+
+Configuración de la Base de Datos: La aplicación debe manejar la conexión a SQLite de forma segura para entornos multi-hilo de Flask. Para esto, debe abrir una nueva conexión a la base de datos dentro de cada petición utilizando un archivo físico temporal (por ejemplo, 'biblioteca.db' que se elimine y recree al iniciar el script), asegurando que la tabla 'libros' con las columnas 'id' (entero, clave primaria), 'titulo' (texto), 'autor' (texto) y 'anio' (entero) esté siempre creada y accesible desde cualquier hilo.
+
+Carga de Datos: Insertar automáticamente al menos 5 registros de libros de prueba con diferentes autores al levantar la aplicación para que la base de datos no esté vacía al iniciar.
+
+Interfaz Web y Endpoint en la Raíz: Toda la aplicación debe responder exclusivamente en la ruta raíz ('/'). Este endpoint debe renderizar y retornar una página HTML completa que incluya:
+
+Un formulario web (<form>) visible con un campo de entrada (<input name="autor">) y un botón de envío. El formulario debe enviar las peticiones vía GET a la misma ruta raíz ('/').
+
+Una sección donde se muestren los resultados de la búsqueda en una tabla o listado estructurado.
+Al recibir el parámetro 'autor' por la URL (ejemplo: /?autor=Borges), el endpoint debe capturar ese valor, ejecutar la consulta SQL para filtrar los libros en la base de datos y mostrar los resultados dentro del HTML. Si no se pasa ningún autor, debe listar todos los libros en el HTML.
+
+Inicialización con Debug Desactivado: Incluir el bloque de ejecución estándar de Flask al final del archivo para que el servidor web se levante localmente en el host '127.0.0.1' y en el puerto 5000 al ejecutar el script. El servidor DEBE correr obligatoriamente con debug=False para evitar la persistencia de subprocesos y asegurar un comportamiento limpio en pruebas automatizadas.
+
+Por favor, proporciona únicamente el código fuente de Python limpio y ejecutable, sin comentarios introductorios ni explicaciones textuales fuera del bloque de código.
