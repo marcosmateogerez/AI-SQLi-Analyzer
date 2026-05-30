@@ -13,7 +13,6 @@ logging.basicConfig(
     datefmt=config.LOG_DATE_FMT
 )
 logging.root.handlers[0].addFilter(lambda r: r.name.startswith("app"))
-logger = logging.getLogger(__name__)
 
 # Definición del directorio base de trabajo.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
