@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
 # Instanciación de logger para este módulo específico.
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"app.{__name__}")
 
 def ejecutar_sast_completo():
     """
@@ -16,7 +16,7 @@ def ejecutar_sast_completo():
     recorre cada escenario de la carpeta /dataset, ejecuta Semgrep y guarda
     los reportes en results/sast_reports.
     """
-    logger.info("Iniciando fase 2: análisis estático...")
+    logger.info("Fase 2: análisis estático...")
     
     # Validación de que la carpeta de reportes exista antes de guardar.
     os.makedirs(config.SAST_REPORTS_DIR, exist_ok=True)
@@ -24,7 +24,7 @@ def ejecutar_sast_completo():
         logger.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
-    # Forzar entorno UTF-8 para el proceso interno.
+    # Forzar entorno UTF-8 para evitar problemas de encoding en el subproceso.
     env_utf8 = os.environ.copy()
     env_utf8["PYTHONUTF8"] = "1"
 
@@ -38,6 +38,7 @@ def ejecutar_sast_completo():
                 logger.warning(f"Saltando {elemento}: no se encontró codigo_ia.py")
                 continue
             
+            # Rutas para el almacenamiento de resultados.
             ruta_reporte = os.path.join(config.SAST_REPORTS_DIR, f"{elemento}_sast.json")
             comando = [
                 "semgrep",
@@ -47,7 +48,7 @@ def ejecutar_sast_completo():
                 ruta_codigo
             ]
 
-            # Ejecución del comando de Semgrep y captura de la salida.
+            # Ejecución del proceso de Semgrep y captura de la salida.
             try:
                 resultado = subprocess.run(
                     comando, 
@@ -57,9 +58,7 @@ def ejecutar_sast_completo():
                     env=env_utf8
                 )
                 
-                if os.path.exists(ruta_reporte):
-                    logger.info(f"Reporte guardado correctamente en /results/sast_reports/{elemento}_sast.json")
-                else:
+                if not os.path.exists(ruta_reporte):
                     logger.error(f"No se pudo generar el archivo de reporte: {resultado.stderr}.")
 
             except Exception as e:

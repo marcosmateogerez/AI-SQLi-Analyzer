@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
 # Instanciación de logger para este módulo específico.
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"app.{__name__}")
 
 def limpiar_codigo_markdown(texto_crudo):
     """
@@ -37,7 +37,7 @@ def ejecutar_inferencia_completa():
     configura el cliente del LLM, itera sobre los casos de uso en el dataset,
     y genera código utilizando el LLM y lo guarda en archivos específicos.
     """
-    logger.info("Iniciando fase 1: generación de código con el LLM...")
+    logger.info("Fase 1: generación de código con el LLM...")
         
     # Verificación de la clave API antes de proceder.
     if not config.GEMINI_API_KEY:
@@ -87,7 +87,6 @@ def ejecutar_inferencia_completa():
 
                 with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
                     f.write(codigo_limpio)
-                logger.info(f"Código generado con éxito en /dataset/{elemento}/codigo_ia.py")
 
             except Exception as e:
                 logger.error(f"Error al procesar {elemento}: {e}")

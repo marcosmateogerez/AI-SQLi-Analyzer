@@ -1,15 +1,18 @@
 from inference.runner_inference import ejecutar_inferencia_completa
 from sast.runner_sast import ejecutar_sast_completo
+from dast.runner_dast import ejecutar_dast_completo
 import logging
+import config
 import sys
 import os
 
 # Configuración básica del logging para seguimiento de la ejecución.
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    level=getattr(logging, config.LOG_LEVEL),
+    format=config.LOG_FORMAT,
+    datefmt=config.LOG_DATE_FMT
 )
+logging.root.handlers[0].addFilter(lambda r: r.name.startswith("app"))
 logger = logging.getLogger(__name__)
 
 # Definición del directorio base de trabajo.
@@ -32,6 +35,12 @@ def main():
     # Fase 2: SAST.
     try:
         ejecutar_sast_completo()
+    except Exception as e:
+        sys.exit(1)
+
+    # Fase 3: DAST.
+    try:
+        ejecutar_dast_completo()
     except Exception as e:
         sys.exit(1)
 
