@@ -1,6 +1,6 @@
 # AI-SQLi-Analyzer
 
-Pipeline automatizado para la detección de SQL Injection en el código generado por inteligencia artificial.
+Pipeline para la detección de SQL Injection en el código generado por inteligencia artificial.
 
 ---
 
@@ -18,10 +18,12 @@ El proyecto se organiza de la siguiente manera:
 
 ## 🛠️ Requisitos e instalación
 
+**Prerrequisitos**: Tener instalado Python 3.x en el sistema.
+
 Para instalar todas las herramientas y dependencias necesarias para el funcionamiento del proyecto, simplemente se debe ejecutar el archivo correspondiente:
 
 ```bash
-py requirements.py
+python requirements.py
 ```
 
 ---
@@ -41,5 +43,5 @@ GEMINI_API_KEY=tu_clave_de_google_aquí
 Para iniciar todo el proceso, se debe ejecutar el script principal desde la terminal ubicada en la raíz del proyecto:
 
 ```bash
-py main.py
+python main.py
 ```
