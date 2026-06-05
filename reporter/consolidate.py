@@ -1,3 +1,4 @@
+import logging
 import config
 import json
 import csv
@@ -39,6 +40,7 @@ def procesar_dast(path):
 
 def generar_resumen_completo():
     """Escanea los directorios de configuración y genera el CSV maestro."""
+    logger.info("Fase 4: generación de resumen con los resultados...")
     sast_dir = config.SAST_REPORTS_DIR
     dast_dir = config.DAST_REPORTS_DIR
     output_csv = os.path.join(config.RESULTS_DIR, "resumen_resultados.csv")

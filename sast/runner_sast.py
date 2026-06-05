@@ -1,11 +1,8 @@
 import subprocess
 import logging
+import config
 import sys
 import os
-
-# Importación de la configuración.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import config
 
 # Instanciación de logger para este módulo específico.
 logger = logging.getLogger(f"app.{__name__}")

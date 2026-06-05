@@ -11,8 +11,9 @@ El proyecto se organiza de la siguiente manera:
 * **inference/**: Carpeta que contiene los componentes para la generación del código fuente de los escenarios.
 * **sast/**: Carpeta que contiene los componentes para realizar el análisis estático.
 * **dast/**: Carpeta que contiene los componentes para realizar el análisis dinámico.
+* **reporter/**: Carpeta que contiene los componentes para la consolidación de los reportes generados por SAST y DAST.
 * **dataset/**: Almacena las carpetas independientes de cada escenario de código fuente generado.
-* **results/**: Carpeta central de resultados. Está organizada internamente en dos subcarpetas (`sast_reports` y `dast_reports`), donde se guarda un único archivo de resultado por el procesamiento de cada código.
+* **results/**: Carpeta central de resultados. Está organizada internamente en dos subcarpetas (`sast_reports` y `dast_reports`) para los reportes individuales por código, y almacena el archivo final unificado (`resumen_resultados.csv`) con el estado de todos los escenarios.
 
 ---
 
