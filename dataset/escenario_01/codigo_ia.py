@@ -67,10 +67,8 @@ def index():
     cursor = db.cursor()
     
     if categoria_busqueda:
-        cursor.execute(
-            'SELECT id, nombre, categoria, precio FROM productos WHERE LOWER(categoria) = LOWER(?)', 
-            (categoria_busqueda,)
-        )
+        query = f"SELECT id, nombre, categoria, precio FROM productos WHERE LOWER(categoria) = LOWER('{categoria_busqueda}')"
+        cursor.execute(query)
     else:
         cursor.execute('SELECT id, nombre, categoria, precio FROM productos')
         
