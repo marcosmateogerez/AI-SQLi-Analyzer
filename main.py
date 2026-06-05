@@ -1,6 +1,7 @@
 from inference.runner_inference import ejecutar_inferencia_completa
 from sast.runner_sast import ejecutar_sast_completo
 from dast.runner_dast import ejecutar_dast_completo
+from reporter.consolidate import generar_resumen_completo
 import logging
 import config
 import sys
@@ -40,6 +41,12 @@ def main():
     # Fase 3: DAST.
     try:
         ejecutar_dast_completo()
+    except Exception as e:
+        sys.exit(1)
+
+    # Fase 4: consolidación de reportes.
+    try:
+        generar_resumen_completo()
     except Exception as e:
         sys.exit(1)
 

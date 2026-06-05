@@ -1,6 +1,6 @@
 # AI-SQLi-Analyzer
 
-Pipeline automatizado para la detección de SQL Injection en el código generado por inteligencia artificial.
+Pipeline para la detección de SQL Injection en el código generado por inteligencia artificial.
 
 ---
 
@@ -11,17 +11,20 @@ El proyecto se organiza de la siguiente manera:
 * **inference/**: Carpeta que contiene los componentes para la generación del código fuente de los escenarios.
 * **sast/**: Carpeta que contiene los componentes para realizar el análisis estático.
 * **dast/**: Carpeta que contiene los componentes para realizar el análisis dinámico.
+* **reporter/**: Carpeta que contiene los componentes para la consolidación de los reportes generados por SAST y DAST.
 * **dataset/**: Almacena las carpetas independientes de cada escenario de código fuente generado.
-* **results/**: Carpeta central de resultados. Está organizada internamente en dos subcarpetas (`sast_reports` y `dast_reports`), donde se guarda un único archivo de resultado por el procesamiento de cada código.
+* **results/**: Carpeta central de resultados. Está organizada internamente en dos subcarpetas (`sast_reports` y `dast_reports`) para los reportes individuales por código, y almacena el archivo final unificado (`resumen_resultados.csv`) con el estado de todos los escenarios.
 
 ---
 
 ## 🛠️ Requisitos e instalación
 
+**Prerrequisitos**: Tener instalado Python 3.x en el sistema.
+
 Para instalar todas las herramientas y dependencias necesarias para el funcionamiento del proyecto, simplemente se debe ejecutar el archivo correspondiente:
 
 ```bash
-py requirements.py
+python requirements.py
 ```
 
 ---
@@ -41,5 +44,5 @@ GEMINI_API_KEY=tu_clave_de_google_aquí
 Para iniciar todo el proceso, se debe ejecutar el script principal desde la terminal ubicada en la raíz del proyecto:
 
 ```bash
-py main.py
+python main.py
 ```

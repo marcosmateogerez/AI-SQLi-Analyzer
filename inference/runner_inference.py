@@ -1,13 +1,10 @@
 from google.genai import types
 from google import genai
 import logging
+import config
 import sys
 import os
 import re
-
-# Inyección de la raíz del proyecto en el path del sistema para importar config.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import config
 
 # Instanciación de logger para este módulo específico.
 logger = logging.getLogger(f"app.{__name__}")
