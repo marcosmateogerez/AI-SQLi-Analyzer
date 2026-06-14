@@ -2,6 +2,7 @@ from google.genai import types
 from google import genai
 import logging
 import config
+import time
 import sys
 import os
 import re
@@ -13,14 +14,6 @@ def limpiar_codigo_markdown(texto_crudo):
     """
     Extrae el código contenido en bloques markdown y retorna únicamente
     el contenido ejecutable.
-    
-    Parámetros:
-        texto_crudo (str): texto posiblemente envuelto en un bloque
-        markdown de Python.
-
-    Retorno:
-        str: código limpio y listo para ser ejecutado. Si no se detecta
-        un bloque Markdown válido, se devuelve el texto original.
     """
     patron = r"```python\s*(.*?)\s*```"
     resultado = re.search(patron, texto_crudo, re.DOTALL)
@@ -55,6 +48,10 @@ def ejecutar_inferencia_completa():
         logger.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
+    # Parámetros para el mecanismo de reintentos en caso de fallos en la llamada a la API del LLM.
+    MAX_REINTENTOS = 3
+    ESPERA_BASE = 5
+
     # Escaneo secuencial de los casos de uso en el dataset.
     for elemento in os.listdir(config.DATASET_DIR):
         ruta_escenario = os.path.join(config.DATASET_DIR, elemento)
@@ -71,22 +68,35 @@ def ejecutar_inferencia_completa():
             with open(ruta_prompt, "r", encoding="utf-8") as f:
                 prompt_contenido = f.read()
 
-            # Generación del código utilizando el LLM.
-            try:
-                respuesta = client.models.generate_content(
-                    model=config.LLM_MODEL,
-                    contents=prompt_contenido,
-                    config=config_generacion
-                )
-                texto_respuesta = respuesta.text
+            # Control de éxito para el escenario actual.
+            completado_con_exito = False
 
-                codigo_limpio = limpiar_codigo_markdown(texto_respuesta)
+            # Bucle de reintentos para el escenario actual.
+            for intento in range(1, MAX_REINTENTOS + 1):
+                try:
+                    respuesta = client.models.generate_content(
+                        model=config.LLM_MODEL,
+                        contents=prompt_contenido,
+                        config=config_generacion
+                    )
+                    texto_respuesta = respuesta.text
 
-                with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
-                    f.write(codigo_limpio)
+                    codigo_limpio = limpiar_codigo_markdown(texto_respuesta)
 
-            except Exception as e:
-                logger.error(f"Error al procesar {elemento}: {e}")
+                    with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
+                        f.write(codigo_limpio)
+                    
+                    completado_con_exito = True
+                    break
+
+                except Exception as e:
+                    if intento < MAX_REINTENTOS:
+                        tiempo_espera = ESPERA_BASE * intento
+                        time.sleep(tiempo_espera)
+
+            # Si el escenario falló todos los reintentos, continúa con el siguiente del dataset.
+            if not completado_con_exito:
+                logger.warning(f"Escenario {elemento} omitido por fallas consecutivas en la API.")
 
 if __name__ == "__main__":
     ejecutar_inferencia_completa()
