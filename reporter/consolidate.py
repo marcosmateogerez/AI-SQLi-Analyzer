@@ -17,13 +17,18 @@ def extraer_id_escenario(filename):
     return match.group(1) if match else None
 
 def procesar_sast(path):
-    """Determina si Semgrep encontró vulnerabilidades."""
+    """Determina si Bandit encontró vulnerabilidades."""
     if not os.path.exists(path):
         return False
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return len(data.get("results", [])) > 0
+        
+        for hallazgo in data.get("results", []):
+            if hallazgo.get("test_id") == "B608":
+                return True
+                
+        return False
     except Exception:
         return False
 

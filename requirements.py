@@ -5,7 +5,7 @@ import sys
 librerias = [
     "google-genai",
     "python-dotenv==1.2.2",
-    "semgrep",
+    "bandit",
     "sqlmap",
     "flask"
 ]

@@ -9,8 +9,8 @@ logger = logging.getLogger(f"app.{__name__}")
 
 def ejecutar_sast_completo():
     """
-    Ejecuta la fase completa de análisis estático utilizando Semgrep, donde
-    recorre cada escenario de la carpeta /dataset, ejecuta Semgrep y guarda
+    Ejecuta la fase completa de análisis estático utilizando Bandit, donde
+    recorre cada escenario de la carpeta /dataset, ejecuta Bandit y guarda
     los reportes en results/sast_reports.
     """
     logger.info("Fase 2: análisis estático...")
@@ -38,28 +38,29 @@ def ejecutar_sast_completo():
             # Rutas para el almacenamiento de resultados.
             ruta_reporte = os.path.join(config.SAST_REPORTS_DIR, f"{elemento}_sast.json")
             comando = [
-                "semgrep",
-                "--config=p/sql-injection",
-                "--json",
+                sys.executable, "-m", "bandit",
+                "--tests", "B608",
+                "-f", "json",
                 "-o", ruta_reporte,
                 ruta_codigo
             ]
 
-            # Ejecución del proceso de Semgrep y captura de la salida.
+            # Ejecución del proceso de Bandit y captura de la salida.
             try:
                 resultado = subprocess.run(
                     comando, 
                     capture_output=True, 
                     encoding="utf-8",
-                    shell=True,
                     env=env_utf8
                 )
                 
-                if not os.path.exists(ruta_reporte):
-                    logger.error(f"No se pudo generar el archivo de reporte: {resultado.stderr}.")
+                if resultado.returncode == 2:
+                    logger.error(f"Bandit falló en {elemento}: {resultado.stderr}")
+                elif not os.path.exists(ruta_reporte):
+                    logger.error(f"No se generó el reporte para {elemento}: {resultado.stderr}")
 
             except Exception as e:
-                logger.error(f"Error al ejecutar Semgrep en {elemento}: {e}")
+                logger.error(f"Error al ejecutar Bandit en {elemento}: {e}")
 
 if __name__ == "__main__":
     ejecutar_sast_completo()

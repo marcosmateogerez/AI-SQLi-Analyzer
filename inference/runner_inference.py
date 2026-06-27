@@ -1,9 +1,9 @@
 from google.genai import types
 from google import genai
 import logging
+import random
 import config
 import time
-import sys
 import os
 import re
 
@@ -21,6 +21,18 @@ def limpiar_codigo_markdown(texto_crudo):
         return resultado.group(1).strip()
     return texto_crudo.strip()
 
+def es_error_reintentable(e):
+    """
+    Devuelve false para errores permanentes del cliente, y true para errores
+    transitorios de red o del servidor.
+    """
+    mensaje = str(e).lower()
+    errores_permanentes = ["400", "401", "403", "404", "invalid argument",
+                           "unauthenticated", "permission denied"]
+    if any(ind in mensaje for ind in errores_permanentes):
+        return False
+    return True
+
 def ejecutar_inferencia_completa():
     """
     Función principal que ejecuta el proceso completo de inferencia,
@@ -35,8 +47,11 @@ def ejecutar_inferencia_completa():
         return
 
     # Inicialización del cliente del LLM.
-    client = genai.Client(api_key=config.GEMINI_API_KEY)
-
+    client = genai.Client(
+        api_key=config.GEMINI_API_KEY,
+        http_options=types.HttpOptions(timeout=120_000)
+    )
+    
     # Configuración para la replicabilidad (temperatura en cero y semilla fija).
     config_generacion = types.GenerateContentConfig(
         temperature=0.0,
@@ -50,7 +65,8 @@ def ejecutar_inferencia_completa():
 
     # Parámetros para el mecanismo de reintentos en caso de fallos en la llamada a la API del LLM.
     MAX_REINTENTOS = 3
-    ESPERA_BASE = 5
+    ESPERA_BASE = 10
+    PAUSA_ENTRE_ESCENARIOS = 15
 
     # Escaneo secuencial de los casos de uso en el dataset.
     for elemento in os.listdir(config.DATASET_DIR):
@@ -81,6 +97,10 @@ def ejecutar_inferencia_completa():
                     )
                     texto_respuesta = respuesta.text
 
+                    # Verificación de que la respuesta no sea vacía antes de continuar.
+                    if not texto_respuesta or not texto_respuesta.strip():
+                        raise ValueError("El modelo devolvió una respuesta vacía.")
+
                     codigo_limpio = limpiar_codigo_markdown(texto_respuesta)
 
                     with open(ruta_salida_codigo, "w", encoding="utf-8") as f:
@@ -90,13 +110,24 @@ def ejecutar_inferencia_completa():
                     break
 
                 except Exception as e:
+                    # Verificación del tipo de error para determinar si vale la pena reintentar.
+                    if not es_error_reintentable(e):
+                        logger.error(f"Error permanente en {elemento}, no se reintentará: {e}")
+                        break
+
+                    logger.error(f"Fallo en intento {intento} para {elemento}: {e}")
                     if intento < MAX_REINTENTOS:
-                        tiempo_espera = ESPERA_BASE * intento
+                        # Backoff exponencial con jitter para espaciar los reintentos.
+                        tiempo_espera = ESPERA_BASE * (2 ** (intento - 1)) + random.uniform(0, 3)
+                        logger.info(f"Reintentando en {tiempo_espera:.1f}s...")
                         time.sleep(tiempo_espera)
 
             # Si el escenario falló todos los reintentos, continúa con el siguiente del dataset.
             if not completado_con_exito:
                 logger.warning(f"Escenario {elemento} omitido por fallas consecutivas en la API.")
+
+            # Pausa entre escenarios para respetar el RPM.
+            time.sleep(PAUSA_ENTRE_ESCENARIOS)
 
 if __name__ == "__main__":
     ejecutar_inferencia_completa()
