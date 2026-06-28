@@ -1,86 +1,105 @@
-import subprocess
 import logging
-import config
-import time
-import sys
 import os
+import subprocess
+import sys
+import time
 
-# Instanciación de logger para este módulo específico.
+import config
+
+# Configuración de Logging.
 logger = logging.getLogger(f"app.{__name__}")
 
-def ejecutar_dast_completo():
+# Constantes globales del módulo.
+CODIGO_IA_FILENAME = "codigo_ia.py"
+TARGET_URL = "http://127.0.0.1:5000"
+TIEMPO_ESPERA_SERVIDOR = 5
+
+
+def analizar_escenario_con_dast(
+    elemento: str, ruta_escenario: str, ruta_reporte: str, env: dict
+) -> None:
     """
-    Ejecuta la fase completa de análisis dinámico utilizando SQLMap, donde
-    recorre cada escenario de la carpeta /dataset, ejecuta SQLMap y guarda 
-    los reportes en results/dast_reports.
+    Gestiona el ciclo de vida del servidor web temporal y ejecuta el análisis
+    dinámico de SQLMap sobre el escenario específico.
     """
-    logger.info("Fase 3: análisis dinámico...")
-    
-    # Validación de que la carpeta de reportes exista antes de guardar.
-    os.makedirs(config.DAST_REPORTS_DIR, exist_ok=True)
+    servidor_proceso = None
+
+    # Inicialización del servidor web temporal.
+    try:
+        servidor_proceso = subprocess.Popen(
+            [sys.executable, CODIGO_IA_FILENAME],
+            cwd=ruta_escenario,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        time.sleep(TIEMPO_ESPERA_SERVIDOR)
+
+    except Exception:
+        logger.error(f"No se pudo iniciar el servidor en el escenario '{elemento}'.")
+        return
+
+    # Configuración del comando de SQLMap.
+    comando = (
+        f"sqlmap -u {TARGET_URL} --batch --crawl=2 --forms "
+        f"--dbms=sqlite --flush-session --level=5 --risk=3 "
+        f'--results-file="{ruta_reporte}"'
+    )
+
+    # Lanzamiento del escaneo dinámico y posterior limpieza del proceso.
+    try:
+        subprocess.run(
+            comando,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            shell=True,
+            env=env,
+        )
+
+    except Exception:
+        logger.error(f"El escaneo no se procesó en el escenario '{elemento}'.")
+
+    finally:
+        if servidor_proceso:
+            servidor_proceso.terminate()
+            servidor_proceso.wait()
+
+
+def ejecutar_dast_completo() -> None:
+    """
+    Función principal que valida el entorno del dataset, recorre secuencialmente
+    los escenarios y coordina la fase de análisis dinámico.
+    """
+    logger.info("Fase 3: análisis dinámico.")
+
     if not os.path.exists(config.DATASET_DIR):
         logger.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
-    # Forzar entorno UTF-8 para evitar problemas de encoding en el subproceso.
+    os.makedirs(config.DAST_REPORTS_DIR, exist_ok=True)
+
     env_utf8 = os.environ.copy()
     env_utf8["PYTHONUTF8"] = "1"
 
-    # Recorrido de los escenarios dentro de la carpeta /dataset.
+    # Escaneo secuencial del dataset.
     for elemento in os.listdir(config.DATASET_DIR):
         ruta_escenario = os.path.join(config.DATASET_DIR, elemento)
 
-        if os.path.isdir(ruta_escenario):
-            ruta_codigo = os.path.join(ruta_escenario, "codigo_ia.py")
-            if not os.path.exists(ruta_codigo):
-                logger.warning(f"Saltando {elemento}: no se encontró codigo_ia.py")
-                continue
-            
-            # Rutas para el almacenamiento de resultados.
-            ruta_reporte = os.path.join(config.DAST_REPORTS_DIR, f"{elemento}_dast.csv")
-            
-            # URL local donde el servidor temporal de flask va a estar escuchando.
-            target_url = "http://127.0.0.1:5000"
-            
-            # Ejecución del servidor temporal para el escenario actual.
-            servidor_proceso = None
-            try:
-                servidor_proceso = subprocess.Popen(
-                    [sys.executable, "codigo_ia.py"],
-                    cwd=ruta_escenario,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-                time.sleep(5)
-                
-            except Exception as e:
-                logger.error(f"No se pudo inicializar el servidor para {elemento}: {e}")
-                continue
+        if not os.path.isdir(ruta_escenario):
+            continue
 
-            # Configuración de SQLMap para el análisis.
-            comando = (
-                f'sqlmap -u {target_url} --batch --crawl=2 --forms '
-                f'--dbms=sqlite --flush-session --level=5 --risk=3 '
-                f'--results-file="{ruta_reporte}"'
+        ruta_codigo = os.path.join(ruta_escenario, CODIGO_IA_FILENAME)
+        if not os.path.exists(ruta_codigo):
+            logger.warning(
+                f"Saltando '{elemento}', no se encontró {CODIGO_IA_FILENAME}."
             )
-            
-            # Ejecución del proceso de SQLMap y captura de la salida.
-            try:
-                subprocess.run(
-                    comando, 
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    shell=True,
-                    env=env_utf8
-                )
-            
-            except Exception as e:
-                logger.error(f"Error durante el escaneo de SQLMap en {elemento}: {e}")
-                
-            finally:
-                if servidor_proceso:
-                    servidor_proceso.terminate()
-                    servidor_proceso.wait()
+            continue
+
+        ruta_reporte = os.path.join(config.DAST_REPORTS_DIR, f"{elemento}_dast.csv")
+
+        logger.info(f"Procesando {elemento}...")
+
+        analizar_escenario_con_dast(elemento, ruta_escenario, ruta_reporte, env_utf8)
+
 
 if __name__ == "__main__":
     ejecutar_dast_completo()

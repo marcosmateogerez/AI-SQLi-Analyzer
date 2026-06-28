@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-06-27T21:47:40Z",
+  "generated_at": "2026-06-28T22:22:24Z",
   "metrics": {
     "C:\\Users\\marco\\OneDrive\\Desktop\\Facultad\\AI-SQLi-Analyzer\\dataset\\escenario_01\\codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,
@@ -11,7 +11,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 127,
+      "loc": 115,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -24,7 +24,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 127,
+      "loc": 115,
       "nosec": 0,
       "skipped_tests": 0
     }
