@@ -34,7 +34,7 @@ python requirements.py
 Se debe crear un archivo llamado `.env` en la raíz del proyecto que contenga la variable de entorno con la clave de acceso:
 
 ```env
-GEMINI_API_KEY=tu_clave_de_google_aquí
+GEMINI_API_KEY=<CLAVE_API_DE_GOOGLE>
 ```
 
 ---

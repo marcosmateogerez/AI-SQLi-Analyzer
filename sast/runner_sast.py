@@ -1,65 +1,86 @@
-import subprocess
 import logging
-import config
-import sys
 import os
+import subprocess
+import sys
 
-# Instanciación de logger para este módulo específico.
+import config
+
+# Configuración de Logging.
 logger = logging.getLogger(f"app.{__name__}")
 
-def ejecutar_sast_completo():
+# Constantes de configuración.
+CODIGO_IA_FILENAME = "codigo_ia.py"
+REGLA_SQLI_BANDIT = "B608"
+
+
+def analizar_escenario_con_bandit(
+    elemento: str, ruta_codigo: str, ruta_reporte: str, env: dict[str, str]
+) -> None:
     """
-    Ejecuta la fase completa de análisis estático utilizando Semgrep, donde
-    recorre cada escenario de la carpeta /dataset, ejecuta Semgrep y guarda
-    los reportes en results/sast_reports.
+    Invoca el subproceso ejecutor de Bandit para un escenario específico
+    y valida la correcta creación de su reporte JSON resultante.
     """
-    logger.info("Fase 2: análisis estático...")
-    
-    # Validación de que la carpeta de reportes exista antes de guardar.
-    os.makedirs(config.SAST_REPORTS_DIR, exist_ok=True)
+    comando = [
+        sys.executable,
+        "-m",
+        "bandit",
+        "--tests",
+        REGLA_SQLI_BANDIT,
+        "-f",
+        "json",
+        "-o",
+        ruta_reporte,
+        ruta_codigo,
+    ]
+
+    try:
+        resultado = subprocess.run(
+            comando, capture_output=True, encoding="utf-8", env=env
+        )
+
+        if resultado.returncode >= 2 or not os.path.exists(ruta_reporte):
+            logger.error(f"Error en el escenario '{elemento}', no se pudo procesar.")
+
+    except Exception:
+        logger.error(f"Error inesperado en el escenario '{elemento}', no se procesó.")
+
+
+def ejecutar_sast_completo() -> None:
+    """
+    Función principal que valida el entorno del dataset, recorre secuencialmente
+    los escenarios y coordina la fase de análisis estático.
+    """
+    logger.info("Fase 2: análisis estático.")
+
     if not os.path.exists(config.DATASET_DIR):
         logger.error(f"La carpeta de dataset no existe en {config.DATASET_DIR}.")
         return
 
-    # Forzar entorno UTF-8 para evitar problemas de encoding en el subproceso.
+    os.makedirs(config.SAST_REPORTS_DIR, exist_ok=True)
+
     env_utf8 = os.environ.copy()
     env_utf8["PYTHONUTF8"] = "1"
 
-    # Recorrido de los escenarios dentro de la carpeta /dataset.
+    # Escaneo y procesamiento secuencial de directorios.
     for elemento in os.listdir(config.DATASET_DIR):
         ruta_escenario = os.path.join(config.DATASET_DIR, elemento)
 
-        if os.path.isdir(ruta_escenario):
-            ruta_codigo = os.path.join(ruta_escenario, "codigo_ia.py")
-            if not os.path.exists(ruta_codigo):
-                logger.warning(f"Saltando {elemento}: no se encontró codigo_ia.py")
-                continue
-            
-            # Rutas para el almacenamiento de resultados.
-            ruta_reporte = os.path.join(config.SAST_REPORTS_DIR, f"{elemento}_sast.json")
-            comando = [
-                "semgrep",
-                "--config=p/sql-injection",
-                "--json",
-                "-o", ruta_reporte,
-                ruta_codigo
-            ]
+        if not os.path.isdir(ruta_escenario):
+            continue
 
-            # Ejecución del proceso de Semgrep y captura de la salida.
-            try:
-                resultado = subprocess.run(
-                    comando, 
-                    capture_output=True, 
-                    encoding="utf-8",
-                    shell=True,
-                    env=env_utf8
-                )
-                
-                if not os.path.exists(ruta_reporte):
-                    logger.error(f"No se pudo generar el archivo de reporte: {resultado.stderr}.")
+        ruta_codigo = os.path.join(ruta_escenario, CODIGO_IA_FILENAME)
+        if not os.path.exists(ruta_codigo):
+            logger.warning(
+                f"Saltando '{elemento}', no se encontró {CODIGO_IA_FILENAME}."
+            )
+            continue
 
-            except Exception as e:
-                logger.error(f"Error al ejecutar Semgrep en {elemento}: {e}")
+        ruta_reporte = os.path.join(config.SAST_REPORTS_DIR, f"{elemento}_sast.json")
+
+        logger.info(f"Procesando {elemento}...")
+
+        analizar_escenario_con_bandit(elemento, ruta_codigo, ruta_reporte, env_utf8)
+
 
 if __name__ == "__main__":
     ejecutar_sast_completo()
