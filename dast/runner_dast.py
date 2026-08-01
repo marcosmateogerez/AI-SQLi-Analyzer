@@ -4,6 +4,8 @@ import subprocess
 import sys
 import time
 
+import psycopg2
+
 import config
 
 # Configuración de Logging.
@@ -15,6 +17,29 @@ TARGET_URL = "http://127.0.0.1:5000"
 TIEMPO_ESPERA_SERVIDOR = 5
 
 
+def resetear_base_de_datos() -> None:
+    """
+    Elimina y recrea el esquema público de PostgreSQL para garantizar
+    que cada escenario comience con una base de datos limpia.
+    """
+    try:
+        conn = psycopg2.connect(
+            host="127.0.0.1",
+            port=5432,
+            user="postgres",
+            password="admin",
+            dbname="test_db",
+        )
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute("DROP SCHEMA public CASCADE;")
+            cur.execute("CREATE SCHEMA public;")
+        conn.close()
+        logger.info("Base de datos reseteada correctamente.")
+    except Exception:
+        logger.warning("No se pudo limpiar la base de datos.")
+
+
 def analizar_escenario_con_dast(
     elemento: str, ruta_escenario: str, ruta_reporte: str, env: dict
 ) -> None:
@@ -23,6 +48,7 @@ def analizar_escenario_con_dast(
     dinámico de SQLMap sobre el escenario específico.
     """
 
+    resetear_base_de_datos()
     servidor_proceso = None
 
     # Inicialización del servidor web temporal.
