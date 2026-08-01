@@ -22,6 +22,7 @@ def analizar_escenario_con_dast(
     Gestiona el ciclo de vida del servidor web temporal y ejecuta el análisis
     dinámico de SQLMap sobre el escenario específico.
     """
+
     servidor_proceso = None
 
     # Inicialización del servidor web temporal.
@@ -38,11 +39,11 @@ def analizar_escenario_con_dast(
         logger.error(f"No se pudo iniciar el servidor en el escenario '{elemento}'.")
         return
 
-    # Configuración del comando de SQLMap.
+    # Configuración del comando de SQLMap
     comando = (
         f"sqlmap -u {TARGET_URL} --batch --crawl=2 --forms "
-        f"--dbms=sqlite --flush-session --level=5 --risk=3 "
-        f'--results-file="{ruta_reporte}"'
+        f"--dbms=postgresql --flush-session --level=5 --risk=3 "
+        f'--technique=BETU --results-file="{ruta_reporte}"'
     )
 
     # Lanzamiento del escaneo dinámico y posterior limpieza del proceso.
