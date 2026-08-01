@@ -10,6 +10,7 @@ librerias = [
     "bandit==1.9.4",
     "flask==3.1.3",
     "google-genai==2.9.0",
+    "psycopg2-binary==2.9.12",
     "python-dotenv==1.2.2",
     "sqlmap==1.10.7",
 ]
