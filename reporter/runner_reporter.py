@@ -9,8 +9,16 @@ import config
 logger = logging.getLogger(f"app.{__name__}")
 
 # Constantes globales del módulo.
-CSV_HEADER = ["Escenario", "SAST", "DAST"]
+CSV_HEADER = ["Escenario", "SAST", "DAST", "Tipos de SQLi encontrados"]
 RESUMEN_FILENAME = "resumen_resultados.csv"
+
+# Mapeo de códigos de SQLMap a nombres completos.
+MAPA_TECNICAS_SQLMAP = {
+    "B": "boolean-based",
+    "E": "error-based",
+    "T": "time-based",
+    "U": "union-based",
+}
 
 
 def extraer_id_escenario(filename: str) -> str | None:
@@ -43,19 +51,31 @@ def procesar_sast(path: str) -> bool:
         return False
 
 
-def procesar_dast(path: str) -> bool:
+def procesar_dast(path: str) -> tuple[bool, str]:
     """
     Determina si SQLMap encontró vulnerabilidades analizando
     el reporte en formato CSV.
     """
     if not os.path.exists(path):
-        return False
+        return False, "-"
     try:
         with open(path, "r", encoding="utf-8") as f:
-            lineas = [linea for linea in f if linea.strip()]
-            return len(lineas) > 1
+            reader = csv.DictReader(f)
+            tecnicas_encontradas = set()
+
+            for row in reader:
+                tech_raw = row.get("Technique(s)", "").strip()
+                for char in tech_raw.upper():
+                    if char in MAPA_TECNICAS_SQLMAP:
+                        tecnicas_encontradas.add(MAPA_TECNICAS_SQLMAP[char])
+
+            if tecnicas_encontradas:
+                cadena_tecnicas = ", ".join(sorted(tecnicas_encontradas))
+                return True, cadena_tecnicas
+
+        return False, "-"
     except Exception:
-        return False
+        return False, "Error"
 
 
 def recolectar_ids_escenarios(sast_dir: str, dast_dir: str) -> list[str]:
@@ -77,7 +97,7 @@ def recolectar_ids_escenarios(sast_dir: str, dast_dir: str) -> list[str]:
             if escenario_id:
                 escenarios.add(escenario_id)
 
-    return sorted(list(escenarios))
+    return sorted(escenarios)
 
 
 def escribir_csv_resumen(ruta_csv: str, filas: list[list]) -> None:
@@ -87,7 +107,7 @@ def escribir_csv_resumen(ruta_csv: str, filas: list[list]) -> None:
     """
     try:
         with open(ruta_csv, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow(CSV_HEADER)
             writer.writerows(filas)
     except Exception:
@@ -125,11 +145,11 @@ def generar_resumen_completo() -> None:
         dast_path = os.path.join(grid_dir, f"{esc_id}_dast.csv")
 
         hubo_sast = procesar_sast(sast_path)
-        hubo_dast = procesar_dast(dast_path)
+        hubo_dast, tecnicas_dast = procesar_dast(dast_path)
 
         logger.info(f"Procesando {esc_id}...")
 
-        filas_resumen.append([esc_id, hubo_sast, hubo_dast])
+        filas_resumen.append([esc_id, hubo_sast, hubo_dast, tecnicas_dast])
 
     escribir_csv_resumen(output_csv, filas_resumen)
 
