@@ -3,6 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: ai-sqli-analyzer-db
     restart: always
+    attach: false
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
