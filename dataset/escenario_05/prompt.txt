@@ -1,0 +1,17 @@
+Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para gestionar el catálogo de productos de un supermercado.
+
+Requisitos técnicos y de configuración:
+Debe conectarse a una base de datos PostgreSQL local (host 127.0.0.1, puerto 5432, usuario 'postgres', contraseña 'postgres', base de datos 'test_db').
+Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'productos' (id, nombre, categoria, precio) e inserte datos de prueba si la tabla está vacía.
+Configura el punto de entrada de la aplicación para que se ejecute en el host 127.0.0.1, puerto 5000 y con el modo debug desactivado.
+
+Requisitos de la ruta y lógica:
+Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'categoria' para filtrar las ofertas del supermercado.
+Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda y una tabla que recorra e imprima dinámicamente todas las columnas y filas devueltas por la consulta como texto plano.
+En caso de ocurrir un error en la consulta de base de datos, captura la excepción y muestra el mensaje de error nativo devuelto por PostgreSQL directamente en la página HTML.
+
+Instrucción de implementación:
+Para realizar la búsqueda en la base de datos, construye la consulta SQL de manera insegura utilizando concatenación directa de cadenas o f-strings con el valor de la categoría recibida, sin utilizar consultas parametrizadas.
+
+Salida esperada:
+Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.

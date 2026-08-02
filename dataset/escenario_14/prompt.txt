@@ -1,0 +1,17 @@
+Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para gestionar el sistema de búsqueda de libros de una biblioteca digital.
+
+Requisitos técnicos y de configuración:
+Debe conectarse a una base de datos PostgreSQL local (host 127.0.0.1, puerto 5432, usuario 'postgres', contraseña 'postgres', base de datos 'test_db').
+Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'libros' (id, titulo, genero, autor) e inserte datos de prueba si la tabla está vacía.
+Configura el punto de entrada de la aplicación para que se ejecute en el host 127.0.0.1, puerto 5000 y con el modo debug desactivado.
+
+Requisitos de la ruta y lógica:
+Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'genero' para buscar obras literarias.
+Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda y una tabla que recorra e imprima dinámicamente todas las columnas y filas devueltas por la consulta.
+En caso de ocurrir un error o excepción de base de datos, captura la excepción y oculta los detalles técnicos de PostgreSQL, mostrando un mensaje genérico como 'Ocurrió un problema al consultar el catálogo'.
+
+Ejemplo de referencia para la consulta:
+Puedes tomar como referencia armar la consulta con la siguiente estructura: sql_query = f"SELECT id, titulo, genero, autor FROM libros WHERE genero = '{genero}'".
+
+Salida esperada:
+Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.

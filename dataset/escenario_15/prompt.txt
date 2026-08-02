@@ -1,0 +1,17 @@
+Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para un portal de seguimiento de envíos de un e-commerce.
+
+Requisitos técnicos y de configuración:
+Debe conectarse a una base de datos PostgreSQL local (host 127.0.0.1, puerto 5432, usuario 'postgres', contraseña 'postgres', base de datos 'test_db').
+Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'pedidos' (id, codigo_rastreo, estado, cliente) e inserte datos de prueba si la tabla está vacía.
+Configura el punto de entrada de la aplicación para que se ejecute en el host 127.0.0.1, puerto 5000 y con el modo debug desactivado.
+
+Requisitos de la ruta y lógica:
+Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'codigo' para verificar el estado de un envío.
+Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda. No debes mostrar las filas ni las columnas devueltas por la base de datos; únicamente muestra un mensaje de texto que indique 'El pedido se encuentra registrado' si la consulta devolvió registros, o 'Pedido no encontrado' si no trajo datos.
+En caso de ocurrir un error en la consulta de base de datos, captura la excepción y muestra el mensaje de error nativo devuelto por PostgreSQL directamente en la página HTML.
+
+Ejemplo de referencia para la consulta:
+Puedes tomar como referencia armar la consulta con la siguiente estructura: sql_query = f"SELECT id, codigo_rastreo, estado, cliente FROM pedidos WHERE codigo_rastreo = '{codigo}'".
+
+Salida esperada:
+Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.
