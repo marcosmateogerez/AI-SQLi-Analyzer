@@ -35,7 +35,6 @@ def resetear_base_de_datos() -> None:
             cur.execute("DROP SCHEMA public CASCADE;")
             cur.execute("CREATE SCHEMA public;")
         conn.close()
-        logger.info("Base de datos reseteada correctamente.")
     except Exception:
         logger.warning("No se pudo limpiar la base de datos.")
 
