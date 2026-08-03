@@ -1,139 +1,169 @@
-import os
-import sqlite3
-from flask import Flask, request, render_template_string, g
-
-DB_FILE = 'datos.db'
-
-# Eliminar base de datos previa para asegurar un inicio limpio
-if os.path.exists(DB_FILE):
-    os.remove(DB_FILE)
-
-# Inicializar la base de datos y cargar datos de prueba
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS productos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            categoria TEXT NOT NULL,
-            precio REAL NOT NULL
-        )
-    ''')
-    
-    # Insertar al menos 5 registros de prueba
-    productos_iniciales = [
-        ('Televisor Smart 4K', 'electronica', 450.00),
-        ('Auriculares Inalámbricos', 'electronica', 85.50),
-        ('Remera de Algodón', 'indumentaria', 25.00),
-        ('Zapatillas Deportivas', 'indumentaria', 110.00),
-        ('Cafetera Express', 'hogar', 135.00),
-        ('Licuadora de Mano', 'hogar', 45.00)
-    ]
-    
-    cursor.executemany('''
-        INSERT INTO productos (nombre, categoria, precio) VALUES (?, ?, ?)
-    ''', productos_iniciales)
-    
-    conn.commit()
-    conn.close()
-
-init_db()
+from flask import Flask, request, render_template_string
+import psycopg2
 
 app = Flask(__name__)
 
-# Gestión de conexión a la base de datos por petición
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DB_FILE)
-    return db
+def init_db():
+    # Conectar a la base de datos por defecto 'postgres' para crear 'test_db' si no existe
+    conn = psycopg2.connect(
+        host='127.0.0.1',
+        port=5432,
+        user='postgres',
+        password='postgres',
+        dbname='postgres'
+    )
+    conn.autocommit = True
+    cur = conn.cursor()
+    try:
+        cur.execute("CREATE DATABASE test_db")
+    except Exception:
+        # Ignorar si la base de datos ya existe
+        pass
+    finally:
+        cur.close()
+        conn.close()
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+    # Conectar a 'test_db' para crear la tabla e insertar datos de prueba
+    conn = psycopg2.connect(
+        host='127.0.0.1',
+        port=5432,
+        user='postgres',
+        password='postgres',
+        dbname='test_db'
+    )
+    cur = conn.cursor()
+    
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS productos (
+            id SERIAL PRIMARY KEY,
+            nombre VARCHAR(100) NOT NULL,
+            categoria VARCHAR(100) NOT NULL,
+            precio NUMERIC(10, 2) NOT NULL
+        )
+    """)
+    conn.commit()
 
-# HTML embebido para la interfaz de usuario
+    # Insertar datos de prueba si la tabla está vacía
+    cur.execute("SELECT COUNT(*) FROM productos")
+    if cur.fetchone()[0] == 0:
+        productos_prueba = [
+            ('Manzana Roja', 'Frutas', 1.50),
+            ('Plátano', 'Frutas', 1.20),
+            ('Leche Entera', 'Lácteos', 0.95),
+            ('Queso Gouda', 'Lácteos', 5.40),
+            ('Pan Integral', 'Panadería', 1.10),
+            ('Detergente', 'Limpieza', 3.99)
+        ]
+        cur.executemany(
+            "INSERT INTO productos (nombre, categoria, precio) VALUES (%s, %s, %s)",
+            productos_prueba
+        )
+        conn.commit()
+    
+    cur.close()
+    conn.close()
+
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Catálogo de Productos</title>
+    <title>Catálogo de Supermercado</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
-        h1 { color: #444; }
-        .search-box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        h1 { color: #333; }
+        form { margin-bottom: 20px; }
         input[type="text"] { padding: 8px; width: 250px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 8px 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        a { margin-left: 10px; text-decoration: none; color: #666; }
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007BFF; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .no-results { padding: 20px; text-align: center; color: #777; }
+        button { padding: 8px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .error-box { background-color: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 4px; margin-top: 20px; }
     </style>
 </head>
 <body>
-
     <h1>Catálogo de Productos</h1>
     
-    <div class="search-box">
-        <form action="/" method="get">
-            <label for="categoria"><strong>Filtrar por Categoría:</strong></label>
-            <input type="text" id="categoria" name="categoria" value="{{ categoria_buscada }}" placeholder="Ej: electronica, hogar...">
-            <button type="submit">Buscar</button>
-            {% if categoria_buscada %}
-                <a href="/">Mostrar todos</a>
-            {% endif %}
-        </form>
-    </div>
+    <form method="GET" action="/">
+        <input type="text" name="categoria" placeholder="Filtrar por categoría..." value="{{ categoria }}">
+        <button type="submit">Buscar</button>
+    </form>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for prod in productos %}
-            <tr>
-                <td>{{ prod[0] }}</td>
-                <td>{{ prod[1] }}</td>
-                <td>{{ prod[2] }}</td>
-                <td>${{ "%.2f"|format(prod[3]) }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4" class="no-results">No se encontraron productos en esta categoría.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% if error %}
+        <div class="error-box">
+            <h3>Error de Base de Datos:</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
 
+    {% if rows %}
+        <table>
+            <thead>
+                <tr>
+                    {% for col in colnames %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        {% for val in row %}
+                            <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif not error %}
+        <p>No se encontraron productos.</p>
+    {% endif %}
 </body>
 </html>
 """
 
 @app.route('/')
 def index():
-    categoria = request.args.get('categoria', '').strip()
-    db = get_db()
-    cursor = db.cursor()
-    
-    if categoria:
-        cursor.execute("SELECT id, nombre, categoria, precio FROM productos WHERE categoria = ?", (categoria,))
-    else:
-        cursor.execute("SELECT id, nombre, categoria, precio FROM productos")
+    categoria = request.args.get('categoria', '')
+    rows = []
+    colnames = []
+    error = None
+
+    try:
+        conn = psycopg2.connect(
+            host='127.0.0.1',
+            port=5432,
+            user='postgres',
+            password='postgres',
+            dbname='test_db'
+        )
+        cur = conn.cursor()
         
-    productos = cursor.fetchall()
-    return render_template_string(HTML_TEMPLATE, productos=productos, categoria_buscada=categoria)
+        if categoria:
+            # Se utiliza formateo de cadenas directo para permitir la visualización de errores nativos de PostgreSQL ante entradas maliciosas o erróneas
+            query = f"SELECT id, nombre, categoria, precio FROM productos WHERE categoria = '{categoria}'"
+        else:
+            query = "SELECT id, nombre, categoria, precio FROM productos"
+            
+        cur.execute(query)
+        rows = cur.fetchall()
+        colnames = [desc[0] for desc in cur.description]
+        
+        cur.close()
+        conn.close()
+    except Exception as e:
+        error = str(e)
+
+    return render_template_string(
+        HTML_TEMPLATE, 
+        categoria=categoria, 
+        rows=rows, 
+        colnames=colnames, 
+        error=error
+    )
 
 if __name__ == '__main__':
+    init_db()
     app.run(host='127.0.0.1', port=5000, debug=False)

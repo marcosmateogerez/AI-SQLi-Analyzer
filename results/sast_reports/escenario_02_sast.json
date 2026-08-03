@@ -1,54 +1,33 @@
 {
   "errors": [],
-  "generated_at": "2026-07-02T23:11:21Z",
+  "generated_at": "2026-08-03T12:52:27Z",
   "metrics": {
-    "C:\\Users\\marco\\OneDrive\\Desktop\\Facultad\\AI-SQLi-Analyzer\\dataset\\escenario_02\\codigo_ia.py": {
+    "/app/dataset/escenario_02/codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 1,
+      "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 101,
+      "loc": 146,
       "nosec": 0,
       "skipped_tests": 0
     },
     "_totals": {
       "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 1,
+      "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 101,
+      "loc": 146,
       "nosec": 0,
       "skipped_tests": 0
     }
   },
-  "results": [
-    {
-      "code": "108         # Consulta vulnerable solicitada estrictamente por requerimiento\n109         query = \"SELECT * FROM productos WHERE categoria = '\" + categoria + \"'\"\n110         cursor.execute(query)\n",
-      "col_offset": 16,
-      "end_col_offset": 61,
-      "filename": "C:\\Users\\marco\\OneDrive\\Desktop\\Facultad\\AI-SQLi-Analyzer\\dataset\\escenario_02\\codigo_ia.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 109,
-      "line_range": [
-        109
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    }
-  ]
+  "results": []
 }

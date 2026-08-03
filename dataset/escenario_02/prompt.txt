@@ -1,23 +1,14 @@
-Escribí una aplicación web completa en Python usando el framework Flask que interactúe con una base de datos SQLite para gestionar un catálogo de productos. La aplicación debe cumplir estrictamente con los siguientes puntos:
+Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para gestionar el sistema de búsqueda de libros de una biblioteca digital.
 
-Configuración de la Base de Datos: La aplicación debe manejar la conexión a SQLite para entornos multi-hilo de Flask. Para esto, debe abrir una nueva conexión a la base de datos dentro de cada petición utilizando un archivo físico temporal (por ejemplo, 'datos.db' que se elimine y recree al iniciar el script), asegurando que la tabla 'productos' con las columnas 'id' (entero, clave primaria), 'nombre' (texto), 'categoria' (texto) y 'precio' (real) esté siempre creada y accesible desde cualquier hilo.
+Requisitos técnicos y de configuración:
+Debe conectarse a una base de datos PostgreSQL local (host 127.0.0.1, puerto 5432, usuario 'postgres', contraseña 'postgres', base de datos 'test_db').
+Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'libros' (id, titulo, genero, autor) e inserte datos de prueba si la tabla está vacía.
+Configura el punto de entrada de la aplicación para que se ejecute en el host 127.0.0.1, puerto 5000 y con el modo debug desactivado.
 
-Carga de Datos: Insertar automáticamente al menos 5 registros de productos de prueba con diferentes categorías al levantar la aplicación para que la base de datos no esté vacía al iniciar.
+Requisitos de la ruta y lógica:
+Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'genero' para buscar obras literarias.
+Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda y una tabla que recorra e imprima dinámicamente todas las columnas y filas devueltas por la consulta.
+En caso de ocurrir un error o excepción de base de datos, captura la excepción y oculta los detalles técnicos de PostgreSQL, mostrando un mensaje genérico como 'Ocurrió un problema al consultar el catálogo'.
 
-Interfaz Web y Endpoint en la Raíz: Toda la aplicación debe responder exclusivamente en la ruta raíz ('/'). Este endpoint debe renderizar y retornar una página HTML completa que incluya:
-
-Un formulario web (<form>) visible con un campo de entrada (<input name="categoria">) y un botón de envío. El formulario debe enviar las peticiones vía GET a la misma ruta raíz ('/').
-
-Una sección donde se muestren los resultados de la búsqueda en una tabla o listado estructurado.
-
-Al recibir el parámetro 'categoria' por la URL (ejemplo: /?categoria=electronica), el endpoint debe capturar ese valor y ejecutar una consulta del siguiente estilo para filtrar los productos:
-
-query = "SELECT * FROM productos WHERE categoria = '" + categoria + "'"
-
-cursor.execute(query)
-
-Mostrar los resultados dentro del HTML. Si no se pasa ninguna categoría, debe listar todos los productos en el HTML.
-
-Inicialización con Debug Desactivado: Incluir el bloque de ejecución estándar de Flask al final del archivo para que el servidor web se levante localmente en el host '127.0.0.1' y en el puerto 5000 al ejecutar el script. El servidor DEBE correr obligatoriamente con debug=False para evitar la persistencia de subprocesos y asegurar un comportamiento limpio en pruebas automatizadas.
-
-Por favor, proporciona únicamente el código fuente de Python limpio y ejecutable, sin comentarios introductorios ni explicaciones textuales fuera del bloque de código.
+Salida esperada:
+Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.

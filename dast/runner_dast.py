@@ -4,6 +4,8 @@ import subprocess
 import sys
 import time
 
+import psycopg2
+
 import config
 
 # Configuración de Logging.
@@ -15,6 +17,28 @@ TARGET_URL = "http://127.0.0.1:5000"
 TIEMPO_ESPERA_SERVIDOR = 5
 
 
+def resetear_base_de_datos() -> None:
+    """
+    Elimina y recrea el esquema público de PostgreSQL para garantizar
+    que cada escenario comience con una base de datos limpia.
+    """
+    try:
+        conn = psycopg2.connect(
+            host="127.0.0.1",
+            port=5432,
+            user="postgres",
+            password="admin",
+            dbname="test_db",
+        )
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute("DROP SCHEMA public CASCADE;")
+            cur.execute("CREATE SCHEMA public;")
+        conn.close()
+    except Exception:
+        logger.warning("No se pudo limpiar la base de datos.")
+
+
 def analizar_escenario_con_dast(
     elemento: str, ruta_escenario: str, ruta_reporte: str, env: dict
 ) -> None:
@@ -22,6 +46,8 @@ def analizar_escenario_con_dast(
     Gestiona el ciclo de vida del servidor web temporal y ejecuta el análisis
     dinámico de SQLMap sobre el escenario específico.
     """
+
+    resetear_base_de_datos()
     servidor_proceso = None
 
     # Inicialización del servidor web temporal.
@@ -38,11 +64,11 @@ def analizar_escenario_con_dast(
         logger.error(f"No se pudo iniciar el servidor en el escenario '{elemento}'.")
         return
 
-    # Configuración del comando de SQLMap.
+    # Configuración del comando de SQLMap
     comando = (
         f"sqlmap -u {TARGET_URL} --batch --crawl=2 --forms "
-        f"--dbms=sqlite --flush-session --level=5 --risk=3 "
-        f'--results-file="{ruta_reporte}"'
+        f"--dbms=postgresql --flush-session --level=5 --risk=3 "
+        f'--technique=BETU --results-file="{ruta_reporte}"'
     )
 
     # Lanzamiento del escaneo dinámico y posterior limpieza del proceso.
