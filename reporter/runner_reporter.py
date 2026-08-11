@@ -9,7 +9,14 @@ import config
 logger = logging.getLogger(f"app.{__name__}")
 
 # Constantes globales del módulo.
-CSV_HEADER = ["Escenario", "SAST", "DAST", "Tipos de SQLi encontrados"]
+CSV_HEADER = [
+    "Escenario",
+    "Consigna",
+    "Enfoque",
+    "SAST",
+    "DAST",
+    "Tipos de SQLi encontrados",
+]
 RESUMEN_FILENAME = "resumen_resultados.csv"
 
 # Mapeo de códigos de SQLMap a nombres completos.
@@ -27,6 +34,34 @@ def extraer_id_escenario(filename: str) -> str | None:
     """
     match = re.match(r"(escenario_\d+)", filename)
     return match.group(1) if match else None
+
+
+def obtener_metadata_escenario(escenario_id: str) -> tuple[str, str]:
+    """
+    Calcula la consigna y el enfoque correspondientes al escenario mediante
+    aritmética modular sobre el número extraído del ID del escenario.
+    """
+    match = re.search(r"\d+", escenario_id)
+    if not match:
+        return "Desconocido", "Desconocido"
+
+    num = int(match.group(0))
+    idx = num - 1
+
+    enfoque_idx = idx // 4
+    consigna_idx = idx % 4
+
+    enfoque = (
+        config.ENFOQUES[enfoque_idx]
+        if 0 <= enfoque_idx < len(config.ENFOQUES)
+        else "Desconocido"
+    )
+    consigna = (
+        config.CONSIGNAS[consigna_idx]
+        if 0 <= consigna_idx < len(config.CONSIGNAS)
+        else "Desconocido"
+    )
+    return consigna, enfoque
 
 
 def procesar_sast(path: str) -> bool:
@@ -135,21 +170,22 @@ def generar_resumen_completo() -> None:
         )
         return
 
-    # Asegura que la carpeta destino de los resultados consolidados exista.
     os.makedirs(config.RESULTS_DIR, exist_ok=True)
     filas_resumen = []
 
-    # Procesamiento individual de cada escenario.
     for esc_id in escenarios_ordenados:
         sast_path = os.path.join(sast_dir, f"{esc_id}_sast.json")
         dast_path = os.path.join(grid_dir, f"{esc_id}_dast.csv")
 
+        consigna, enfoque = obtener_metadata_escenario(esc_id)
         hubo_sast = procesar_sast(sast_path)
         hubo_dast, tecnicas_dast = procesar_dast(dast_path)
 
         logger.info(f"Procesando {esc_id}...")
 
-        filas_resumen.append([esc_id, hubo_sast, hubo_dast, tecnicas_dast])
+        filas_resumen.append(
+            [esc_id, consigna, enfoque, hubo_sast, hubo_dast, tecnicas_dast]
+        )
 
     escribir_csv_resumen(output_csv, filas_resumen)
 

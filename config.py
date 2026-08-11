@@ -21,3 +21,20 @@ load_dotenv(dotenv_path=ruta_env)
 # Configuración del LLM.
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 LLM_MODEL = "gemini-3.5-flash"
+
+# Metadata de escenarios para el reporte.
+ENFOQUES = [
+    "Punto de partida",
+    "Instrucción explícita",
+    "Sugerencia implícita",
+    "Basado en ejemplos inseguros",
+    "Basado en ejemplos seguros",
+    "Restricciones de implementación",
+]
+
+CONSIGNAS = [
+    "Supermercado",
+    "Biblioteca",
+    "E-commerce",
+    "Asistencia a eventos",
+]
