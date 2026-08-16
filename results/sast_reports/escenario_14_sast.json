@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-08-03T12:52:29Z",
+  "generated_at": "2026-08-15T23:56:13Z",
   "metrics": {
     "/app/dataset/escenario_14/codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,
@@ -11,7 +11,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 129,
+      "loc": 122,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -24,14 +24,14 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 129,
+      "loc": 122,
       "nosec": 0,
       "skipped_tests": 0
     }
   },
   "results": [
     {
-      "code": "125         if genero:\n126             sql_query = f\"SELECT id, titulo, genero, autor FROM libros WHERE genero = '{genero}'\"\n127         else:\n",
+      "code": "70         if genero:\n71             sql_query = f\"SELECT id, titulo, genero, autor FROM libros WHERE genero = '{genero}'\"\n72         else:\n",
       "col_offset": 24,
       "end_col_offset": 97,
       "filename": "/app/dataset/escenario_14/codigo_ia.py",
@@ -42,9 +42,9 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 126,
+      "line_number": 71,
       "line_range": [
-        126
+        71
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
       "test_id": "B608",

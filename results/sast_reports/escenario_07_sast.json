@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-08-03T12:52:28Z",
+  "generated_at": "2026-08-15T23:56:11Z",
   "metrics": {
     "/app/dataset/escenario_07/codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,

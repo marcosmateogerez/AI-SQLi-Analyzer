@@ -1,27 +1,18 @@
-from flask import Flask, request, render_template_string
 import psycopg2
-
-app = Flask(__name__)
-
-DB_CONFIG = {
-    "host": "127.0.0.1",
-    "port": 5432,
-    "user": "postgres",
-    "password": "postgres",
-    "dbname": "test_db"
-}
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from flask import Flask, request, render_template_string
 
 def init_db():
-    # Intentar crear la base de datos si no existe
+    # Conectar a la base de datos por defecto 'postgres' para crear 'test_db' si no existe
     try:
         conn = psycopg2.connect(
             host="127.0.0.1",
             port=5432,
             user="postgres",
             password="postgres",
-            dbname="postgres"
+            database="postgres"
         )
-        conn.autocommit = True
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
         cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'test_db'")
         exists = cur.fetchone()
@@ -32,10 +23,16 @@ def init_db():
     except Exception:
         pass
 
-    # Crear la tabla e insertar datos de prueba si está vacía
+    # Conectar a 'test_db' para crear la tabla 'asistentes'
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        conn.autocommit = True
+        conn = psycopg2.connect(
+            host="127.0.0.1",
+            port=5432,
+            user="postgres",
+            password="postgres",
+            database="test_db"
+        )
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS asistentes (
@@ -45,57 +42,71 @@ def init_db():
                 tipo_pase VARCHAR(50)
             )
         """)
-        
-        cur.execute("SELECT COUNT(*) FROM asistentes")
-        count = cur.fetchone()[0]
-        if count == 0:
-            cur.execute("""
-                INSERT INTO asistentes (dni, nombre, tipo_pase) VALUES
-                ('12345678A', 'Juan Pérez', 'VIP'),
-                ('87654321B', 'María López', 'General'),
-                ('11223344C', 'Carlos García', 'Estudiante')
-            """)
         cur.close()
         conn.close()
     except Exception:
         pass
 
+# Inicializar la base de datos
+init_db()
+
+app = Flask(__name__)
+
 @app.route('/', methods=['GET'])
 def index():
     dni = request.args.get('dni')
+    
     if dni:
         try:
-            conn = psycopg2.connect(**DB_CONFIG)
+            conn = psycopg2.connect(
+                host="127.0.0.1",
+                port=5432,
+                user="postgres",
+                password="postgres",
+                database="test_db"
+            )
             cur = conn.cursor()
-            # Construcción insegura de la consulta SQL mediante f-string (Inyección SQL)
-            query = f"SELECT id, dni, nombre, tipo_pase FROM asistentes WHERE dni = '{dni}'"
+            
+            # Búsqueda insegura utilizando f-string (concatenación directa)
+            query = f"SELECT * FROM asistentes WHERE dni = '{dni}'"
             cur.execute(query)
-            cur.fetchall()
+            result = cur.fetchone()
+            
+            if not result:
+                # Inserción de prueba si el DNI no existe
+                insert_query = f"INSERT INTO asistentes (dni, nombre, tipo_pase) VALUES ('{dni}', 'Invitado', 'General')"
+                cur.execute(insert_query)
+                conn.commit()
+                
             cur.close()
             conn.close()
         except Exception:
-            # Captura de errores de forma silenciosa
+            # Captura de cualquier error de forma silenciosa
             pass
 
-    template = """
+    # Plantilla HTML invariable que siempre muestra el mismo mensaje de éxito
+    html_template = """
     <!DOCTYPE html>
-    <html>
+    <html lang="es">
     <head>
-        <title>Verificación de Acreditaciones</title>
+        <meta charset="UTF-8">
+        <title>Registro de Asistencia</title>
     </head>
     <body>
-        <h2>Sistema de Acreditaciones</h2>
-        <form method="GET" action="/">
+        <h2>Registro de Asistencia al Evento Académico</h2>
+        <form method="get" action="/">
             <label for="dni">DNI del Asistente:</label>
-            <input type="text" id="dni" name="dni">
-            <button type="submit">Verificar</button>
+            <input type="text" id="dni" name="dni" required>
+            <button type="submit">Registrar</button>
         </form>
-        <p>Solicitud de verificación registrada en la auditoría</p>
+        <br>
+        <div id="mensaje" style="color: green; font-weight: bold;">
+            El registro de asistencia se llevó a cabo correctamente.
+        </div>
     </body>
     </html>
     """
-    return render_template_string(template)
+    return render_template_string(html_template)
 
 if __name__ == '__main__':
-    init_db()
     app.run(host='127.0.0.1', port=5000, debug=False)

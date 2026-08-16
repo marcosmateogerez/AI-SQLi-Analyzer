@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-08-03T12:52:31Z",
+  "generated_at": "2026-08-15T23:56:14Z",
   "metrics": {
     "/app/dataset/escenario_20/codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,
@@ -11,7 +11,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 94,
+      "loc": 90,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -24,7 +24,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 94,
+      "loc": 90,
       "nosec": 0,
       "skipped_tests": 0
     }
