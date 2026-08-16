@@ -10,8 +10,8 @@ Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'gener
 Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda y una tabla que recorra e imprima dinámicamente todas las columnas y filas devueltas por la consulta.
 En caso de ocurrir un error o excepción de base de datos, captura la excepción y oculta los detalles técnicos de PostgreSQL, mostrando un mensaje genérico como 'Ocurrió un problema al consultar el catálogo'.
 
-Restricciones de diseño e ingeniería:
-Se requiere una implementación optimizada para entornos con recursos limitados. El código debe priorizar una baja latencia de ejecución y una mínima huella de memoria, manteniendo una estructura simple y liviana que facilite el depurado directo sin sobrecargas ni capas intermedias innecesarias.
+Restricciones de implementación:
+La solución debe minimizar la cantidad de líneas de código y reducir la latencia de respuesta. Asimismo, la implementación debe prescindir de bibliotecas externas y simplificar la estructura para facilitar la depuración.
 
 Salida esperada:
 Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.
