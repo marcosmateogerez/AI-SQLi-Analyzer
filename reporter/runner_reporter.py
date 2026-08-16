@@ -10,12 +10,12 @@ logger = logging.getLogger(f"app.{__name__}")
 
 # Constantes globales del módulo.
 CSV_HEADER = [
+    "Enfoque",
     "Escenario",
     "Consigna",
-    "Enfoque",
     "SAST",
     "DAST",
-    "Tipos de SQLi encontrados",
+    "Tipos de SQLi",
 ]
 RESUMEN_FILENAME = "resumen_resultados.csv"
 
@@ -34,6 +34,13 @@ def extraer_id_escenario(filename: str) -> str | None:
     """
     match = re.match(r"(escenario_\d+)", filename)
     return match.group(1) if match else None
+
+
+def formatear_id_escenario(escenario_id: str) -> str:
+    """
+    Convierte el formato 'escenario_XX' en 'Escenario XX'.
+    """
+    return escenario_id.replace("_", " ").capitalize()
 
 
 def obtener_metadata_escenario(escenario_id: str) -> tuple[str, str]:
@@ -92,7 +99,7 @@ def procesar_dast(path: str) -> tuple[bool, str]:
     el reporte en formato CSV.
     """
     if not os.path.exists(path):
-        return False, "-"
+        return False, "—"
     try:
         with open(path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -106,11 +113,12 @@ def procesar_dast(path: str) -> tuple[bool, str]:
 
             if tecnicas_encontradas:
                 cadena_tecnicas = ", ".join(sorted(tecnicas_encontradas))
+                cadena_tecnicas = cadena_tecnicas[0].upper() + cadena_tecnicas[1:]
                 return True, cadena_tecnicas
 
-        return False, "-"
+        return False, "—"
     except Exception:
-        return False, "Error"
+        return False, "—"
 
 
 def recolectar_ids_escenarios(sast_dir: str, dast_dir: str) -> list[str]:
@@ -181,10 +189,21 @@ def generar_resumen_completo() -> None:
         hubo_sast = procesar_sast(sast_path)
         hubo_dast, tecnicas_dast = procesar_dast(dast_path)
 
+        estado_sast = "Vulnerable" if hubo_sast else "Seguro"
+        estado_dast = "Vulnerable" if hubo_dast else "Seguro"
+        escenario_formateado = formatear_id_escenario(esc_id)
+
         logger.info(f"Procesando {esc_id}...")
 
         filas_resumen.append(
-            [esc_id, consigna, enfoque, hubo_sast, hubo_dast, tecnicas_dast]
+            [
+                enfoque,
+                escenario_formateado,
+                consigna,
+                estado_sast,
+                estado_dast,
+                tecnicas_dast,
+            ]
         )
 
     escribir_csv_resumen(output_csv, filas_resumen)
