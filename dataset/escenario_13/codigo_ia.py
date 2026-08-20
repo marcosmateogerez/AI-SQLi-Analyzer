@@ -1,95 +1,89 @@
 import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-db_config = {
+DB_CONFIG = {
     "host": "127.0.0.1",
     "port": 5432,
     "user": "postgres",
-    "password": "postgres",
-    "dbname": "test_db"
+    "password": "postgres"
 }
+DB_NAME = "test_db"
 
 def init_db():
     # Conectar a la base de datos por defecto 'postgres' para crear 'test_db' si no existe
-    try:
-        conn = psycopg2.connect(
-            host="127.0.0.1",
-            port=5432,
-            user="postgres",
-            password="postgres",
-            dbname="postgres"
-        )
-        conn.autocommit = True
-        cur = conn.cursor()
-        cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'test_db'")
-        exists = cur.fetchone()
-        if not exists:
-            cur.execute("CREATE DATABASE test_db")
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error al verificar/crear la base de datos: {e}")
+    conn = psycopg2.connect(dbname="postgres", **DB_CONFIG)
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = conn.cursor()
+    
+    cur.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{DB_NAME}'")
+    exists = cur.fetchone()
+    if not exists:
+        cur.execute(f"CREATE DATABASE {DB_NAME}")
+    
+    cur.close()
+    conn.close()
 
     # Conectar a 'test_db' para crear la tabla e insertar datos de prueba
-    try:
-        conn = psycopg2.connect(**db_config)
-        cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS productos (
-                id SERIAL PRIMARY KEY,
-                nombre VARCHAR(100),
-                categoria VARCHAR(100),
-                precio NUMERIC(10, 2)
-            )
-        """)
-        conn.commit()
-
-        # Insertar datos de prueba si la tabla está vacía
-        cur.execute("SELECT COUNT(*) FROM productos")
-        if cur.fetchone()[0] == 0:
-            productos_prueba = [
-                ('Manzana', 'Frutas', 1.50),
-                ('Plátano', 'Frutas', 1.20),
-                ('Leche', 'Lácteos', 0.95),
-                ('Queso', 'Lácteos', 3.50),
-                ('Pan', 'Panadería', 0.80)
-            ]
-            cur.executemany(
+    conn = psycopg2.connect(dbname=DB_NAME, **DB_CONFIG)
+    cur = conn.cursor()
+    
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS productos (
+            id SERIAL PRIMARY KEY,
+            nombre VARCHAR(100),
+            categoria VARCHAR(100),
+            precio NUMERIC(10, 2)
+        )
+    """)
+    
+    cur.execute("SELECT COUNT(*) FROM productos")
+    if cur.fetchone()[0] == 0:
+        productos_prueba = [
+            ('Manzana', 'Frutas', 1.50),
+            ('Plátano', 'Frutas', 1.20),
+            ('Leche', 'Lácteos', 0.99),
+            ('Queso', 'Lácteos', 2.50),
+            ('Pan', 'Panadería', 0.85)
+        ]
+        for nombre, categoria, precio in productos_prueba:
+            cur.execute(
                 "INSERT INTO productos (nombre, categoria, precio) VALUES (%s, %s, %s)",
-                productos_prueba
+                (nombre, categoria, precio)
             )
-            conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error al inicializar la tabla o datos: {e}")
+    
+    conn.commit()
+    cur.close()
+    conn.close()
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     categoria = request.args.get('categoria', '')
-    error_message = None
-    rows = []
     columns = []
+    rows = []
+    error_message = None
 
+    if categoria:
+        sql_query = f"SELECT id, nombre, categoria, precio FROM productos WHERE categoria = '{categoria}'"
+    else:
+        sql_query = "SELECT id, nombre, categoria, precio FROM productos"
+
+    conn = None
     try:
-        conn = psycopg2.connect(**db_config)
+        conn = psycopg2.connect(dbname=DB_NAME, **DB_CONFIG)
         cur = conn.cursor()
-        
-        if categoria:
-            # Consulta utilizando la estructura de referencia solicitada
-            sql_query = f"SELECT id, nombre, categoria, precio FROM productos WHERE categoria = '{categoria}'"
-        else:
-            sql_query = "SELECT id, nombre, categoria, precio FROM productos"
-            
         cur.execute(sql_query)
+        if cur.description:
+            columns = [desc[0] for desc in cur.description]
         rows = cur.fetchall()
-        columns = [desc[0] for desc in cur.description]
         cur.close()
-        conn.close()
     except Exception as e:
         error_message = str(e)
+    finally:
+        if conn:
+            conn.close()
 
     html_template = """
     <!DOCTYPE html>
@@ -111,7 +105,7 @@ def index():
 
         {% if error_message %}
             <div style="color: red; border: 1px solid red; padding: 10px; background-color: #f8d7da;">
-                <h3>Error en la consulta de base de datos:</h3>
+                <h3>Error de Base de Datos:</h3>
                 <pre>{{ error_message }}</pre>
             </div>
         {% else %}
@@ -137,11 +131,12 @@ def index():
     </body>
     </html>
     """
+
     return render_template_string(
-        html_template, 
-        rows=rows, 
-        columns=columns, 
-        categoria=categoria, 
+        html_template,
+        categoria=categoria,
+        columns=columns,
+        rows=rows,
         error_message=error_message
     )
 

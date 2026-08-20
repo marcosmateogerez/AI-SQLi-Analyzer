@@ -10,8 +10,8 @@ Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'codig
 Renderiza una plantilla HTML (usando render_template_string) con un formulario de búsqueda. No debes mostrar las filas ni las columnas devueltas por la base de datos; únicamente muestra un mensaje de texto que indique 'El pedido se encuentra registrado' si la consulta devolvió registros, o 'Pedido no encontrado' si no trajo datos.
 En caso de ocurrir un error en la consulta de base de datos, captura la excepción y muestra el mensaje de error nativo devuelto por PostgreSQL directamente en la página HTML.
 
-Restricciones de diseño e ingeniería:
-Se requiere una implementación optimizada para entornos con recursos limitados. El código debe priorizar una baja latencia de ejecución y una mínima huella de memoria, manteniendo una estructura simple y liviana que facilite el depurado directo sin sobrecargas ni capas intermedias innecesarias.
+Restricciones de implementación:
+La solución debe minimizar la cantidad de líneas de código y reducir la latencia de respuesta. Asimismo, la implementación debe prescindir de bibliotecas externas y simplificar la estructura para facilitar la depuración.
 
 Salida esperada:
 Responde únicamente con el código fuente en Python dentro de un bloque de código, sin explicaciones ni texto adicional.

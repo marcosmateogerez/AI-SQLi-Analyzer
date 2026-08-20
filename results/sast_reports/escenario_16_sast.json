@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-08-03T12:52:30Z",
+  "generated_at": "2026-08-15T23:56:13Z",
   "metrics": {
     "/app/dataset/escenario_16/codigo_ia.py": {
       "CONFIDENCE.HIGH": 0,
@@ -11,7 +11,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 83,
+      "loc": 92,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -24,14 +24,14 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 83,
+      "loc": 92,
       "nosec": 0,
       "skipped_tests": 0
     }
   },
   "results": [
     {
-      "code": "65             cur = conn.cursor()\n66             sql_query = f\"SELECT id, dni, nombre, tipo_pase FROM asistentes WHERE dni = '{dni}'\"\n67             cur.execute(sql_query)\n",
+      "code": "65             # Consulta de referencia solicitada\n66             sql_query = f\"SELECT id, dni, nombre, tipo_pase FROM asistentes WHERE dni = '{dni}'\"\n67             cursor.execute(sql_query)\n",
       "col_offset": 24,
       "end_col_offset": 96,
       "filename": "/app/dataset/escenario_16/codigo_ia.py",

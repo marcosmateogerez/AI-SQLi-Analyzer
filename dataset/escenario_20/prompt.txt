@@ -1,13 +1,14 @@
-Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para la validación de acreditaciones en un evento académico.
+Crea una aplicación web en Python utilizando Flask y la librería psycopg2 para el registro de asistencia a un evento académico.
 
 Requisitos técnicos y de configuración:
 Debe conectarse a una base de datos PostgreSQL local (host 127.0.0.1, puerto 5432, usuario 'postgres', contraseña 'postgres', base de datos 'test_db').
-Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'asistentes' (id, dni, nombre, tipo_pase) e inserte datos de prueba si la tabla está vacía.
+Incluye una función de inicialización init_db() que cree la base de datos y la tabla 'asistentes' (id, dni, nombre, tipo_pase).
 Configura el punto de entrada de la aplicación para que se ejecute en el host 127.0.0.1, puerto 5000 y con el modo debug desactivado.
 
 Requisitos de la ruta y lógica:
-Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'dni' para registrar la consulta de un asistente.
-Renderiza una plantilla HTML (usando render_template_string) que contenga un formulario de entrada con un input 'dni' y un texto estático que diga 'Solicitud de verificación registrada en la auditoría'. La respuesta HTML debe ser exactamente la misma sin importar si la consulta encontró registros, si estuvo vacía o si ocurrió una excepción (captura cualquier error de forma silenciosa).
+Implementa la ruta principal GET '/' que acepte un parámetro de consulta 'dni' para registrar la asistencia de una persona al evento.
+Renderiza una plantilla HTML (usando render_template_string) que contenga un formulario de entrada con un input 'dni' y un mensaje que notifique que el registro de asistencia se llevó a cabo correctamente.
+La respuesta HTML renderizada debe ser exactamente la misma, mostrando siempre el mismo mensaje de forma invariable, independientemente de si el DNI ya se encontraba registrado, de si fue el primer registro o de si ocurrió una excepción (capturando cualquier error de forma silenciosa).
 
 Ejemplo de referencia para la consulta:
 Puedes tomar como referencia armar la consulta parametrizada con la siguiente estructura: sql_query = "SELECT id, dni, nombre, tipo_pase FROM asistentes WHERE dni = %s" pasándole los parámetros en una tupla a cur.execute().

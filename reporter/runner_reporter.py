@@ -9,7 +9,14 @@ import config
 logger = logging.getLogger(f"app.{__name__}")
 
 # Constantes globales del módulo.
-CSV_HEADER = ["Escenario", "SAST", "DAST", "Tipos de SQLi encontrados"]
+CSV_HEADER = [
+    "Enfoque",
+    "Escenario",
+    "Consigna",
+    "SAST",
+    "DAST",
+    "Tipos de SQLi",
+]
 RESUMEN_FILENAME = "resumen_resultados.csv"
 
 # Mapeo de códigos de SQLMap a nombres completos.
@@ -27,6 +34,41 @@ def extraer_id_escenario(filename: str) -> str | None:
     """
     match = re.match(r"(escenario_\d+)", filename)
     return match.group(1) if match else None
+
+
+def formatear_id_escenario(escenario_id: str) -> str:
+    """
+    Convierte el formato 'escenario_XX' en 'Escenario XX'.
+    """
+    return escenario_id.replace("_", " ").capitalize()
+
+
+def obtener_metadata_escenario(escenario_id: str) -> tuple[str, str]:
+    """
+    Calcula la consigna y el enfoque correspondientes al escenario mediante
+    aritmética modular sobre el número extraído del ID del escenario.
+    """
+    match = re.search(r"\d+", escenario_id)
+    if not match:
+        return "Desconocido", "Desconocido"
+
+    num = int(match.group(0))
+    idx = num - 1
+
+    enfoque_idx = idx // 4
+    consigna_idx = idx % 4
+
+    enfoque = (
+        config.ENFOQUES[enfoque_idx]
+        if 0 <= enfoque_idx < len(config.ENFOQUES)
+        else "Desconocido"
+    )
+    consigna = (
+        config.CONSIGNAS[consigna_idx]
+        if 0 <= consigna_idx < len(config.CONSIGNAS)
+        else "Desconocido"
+    )
+    return consigna, enfoque
 
 
 def procesar_sast(path: str) -> bool:
@@ -57,7 +99,7 @@ def procesar_dast(path: str) -> tuple[bool, str]:
     el reporte en formato CSV.
     """
     if not os.path.exists(path):
-        return False, "-"
+        return False, "—"
     try:
         with open(path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -71,11 +113,12 @@ def procesar_dast(path: str) -> tuple[bool, str]:
 
             if tecnicas_encontradas:
                 cadena_tecnicas = ", ".join(sorted(tecnicas_encontradas))
+                cadena_tecnicas = cadena_tecnicas[0].upper() + cadena_tecnicas[1:]
                 return True, cadena_tecnicas
 
-        return False, "-"
+        return False, "—"
     except Exception:
-        return False, "Error"
+        return False, "—"
 
 
 def recolectar_ids_escenarios(sast_dir: str, dast_dir: str) -> list[str]:
@@ -135,21 +178,33 @@ def generar_resumen_completo() -> None:
         )
         return
 
-    # Asegura que la carpeta destino de los resultados consolidados exista.
     os.makedirs(config.RESULTS_DIR, exist_ok=True)
     filas_resumen = []
 
-    # Procesamiento individual de cada escenario.
     for esc_id in escenarios_ordenados:
         sast_path = os.path.join(sast_dir, f"{esc_id}_sast.json")
         dast_path = os.path.join(grid_dir, f"{esc_id}_dast.csv")
 
+        consigna, enfoque = obtener_metadata_escenario(esc_id)
         hubo_sast = procesar_sast(sast_path)
         hubo_dast, tecnicas_dast = procesar_dast(dast_path)
 
+        estado_sast = "Vulnerable" if hubo_sast else "Seguro"
+        estado_dast = "Vulnerable" if hubo_dast else "Seguro"
+        escenario_formateado = formatear_id_escenario(esc_id)
+
         logger.info(f"Procesando {esc_id}...")
 
-        filas_resumen.append([esc_id, hubo_sast, hubo_dast, tecnicas_dast])
+        filas_resumen.append(
+            [
+                enfoque,
+                escenario_formateado,
+                consigna,
+                estado_sast,
+                estado_dast,
+                tecnicas_dast,
+            ]
+        )
 
     escribir_csv_resumen(output_csv, filas_resumen)
 
