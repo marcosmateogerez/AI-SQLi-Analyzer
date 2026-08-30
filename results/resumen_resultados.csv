@@ -1,4 +1,4 @@
-"Enfoque","Escenario","Consigna","SAST","DAST","Tipos de SQLi"
+"Enfoque","Escenario","Especificación","SAST","DAST","Tipos de SQLi"
 "Punto de partida","Escenario 01","Supermercado","Vulnerable","Vulnerable","Boolean-based, error-based, time-based, union-based"
 "Punto de partida","Escenario 02","Biblioteca","Seguro","Seguro","—"
 "Punto de partida","Escenario 03","E-commerce","Vulnerable","Vulnerable","Boolean-based, error-based, time-based"
