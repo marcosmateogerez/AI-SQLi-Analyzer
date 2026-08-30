@@ -32,7 +32,7 @@ ENFOQUES = [
     "Restricciones de implementación",
 ]
 
-CONSIGNAS = [
+ESPECIFICACIONES = [
     "Supermercado",
     "Biblioteca",
     "E-commerce",

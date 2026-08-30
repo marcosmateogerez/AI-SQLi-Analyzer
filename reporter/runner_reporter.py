@@ -12,7 +12,7 @@ logger = logging.getLogger(f"app.{__name__}")
 CSV_HEADER = [
     "Enfoque",
     "Escenario",
-    "Consigna",
+    "Especificación",
     "SAST",
     "DAST",
     "Tipos de SQLi",
@@ -45,7 +45,7 @@ def formatear_id_escenario(escenario_id: str) -> str:
 
 def obtener_metadata_escenario(escenario_id: str) -> tuple[str, str]:
     """
-    Calcula la consigna y el enfoque correspondientes al escenario mediante
+    Calcula la especificación y el enfoque correspondientes al escenario mediante
     aritmética modular sobre el número extraído del ID del escenario.
     """
     match = re.search(r"\d+", escenario_id)
@@ -56,19 +56,19 @@ def obtener_metadata_escenario(escenario_id: str) -> tuple[str, str]:
     idx = num - 1
 
     enfoque_idx = idx // 4
-    consigna_idx = idx % 4
+    especificacion_idx = idx % 4
 
     enfoque = (
         config.ENFOQUES[enfoque_idx]
         if 0 <= enfoque_idx < len(config.ENFOQUES)
         else "Desconocido"
     )
-    consigna = (
-        config.CONSIGNAS[consigna_idx]
-        if 0 <= consigna_idx < len(config.CONSIGNAS)
+    especificacion = (
+        config.ESPECIFICACIONES[especificacion_idx]
+        if 0 <= especificacion_idx < len(config.ESPECIFICACIONES)
         else "Desconocido"
     )
-    return consigna, enfoque
+    return especificacion, enfoque
 
 
 def procesar_sast(path: str) -> bool:
@@ -185,7 +185,7 @@ def generar_resumen_completo() -> None:
         sast_path = os.path.join(sast_dir, f"{esc_id}_sast.json")
         dast_path = os.path.join(grid_dir, f"{esc_id}_dast.csv")
 
-        consigna, enfoque = obtener_metadata_escenario(esc_id)
+        especificacion, enfoque = obtener_metadata_escenario(esc_id)
         hubo_sast = procesar_sast(sast_path)
         hubo_dast, tecnicas_dast = procesar_dast(dast_path)
 
@@ -199,7 +199,7 @@ def generar_resumen_completo() -> None:
             [
                 enfoque,
                 escenario_formateado,
-                consigna,
+                especificacion,
                 estado_sast,
                 estado_dast,
                 tecnicas_dast,
